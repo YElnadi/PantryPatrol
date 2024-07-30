@@ -36,3 +36,4 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
 
 #This is a project that utilize Next.js in the frontend and firebase in the backend. 
+#run the file "npm run dev"
