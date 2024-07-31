@@ -20,7 +20,7 @@ export default function Home() {
     const pantryList = [];
     docs.forEach((doc) => {
       // console.log(doc.id);
-      pantryList.push({ id: doc.id, ...doc.data() });
+      pantryList.push({ name: doc.id, ...doc.data() });
     });
     console.log("pantryList", pantryList);
     setPantry(pantryList);
@@ -30,15 +30,15 @@ export default function Home() {
     updatePantry();
   }, []);
 
-  const deleteItem = async (itemId) => {
-    const docRef = doc(collection(firestore, "pantry"), itemId);
+  const deleteItem = async (itemName) => {
+    const docRef = doc(collection(firestore, "pantry"), itemName);
     await deleteDoc(docRef);
     await updatePantry();
   };
 
-  const updateItem = async (itemId, newName, newQuantity) => {
+  const updateItem = async (itemName, newName, newQuantity) => {
     //create a ref to the item in firestore
-    const docRef = doc(collection(firestore, "pantry"), itemId);
+    const docRef = doc(collection(firestore, "pantry"), itemName);
     //update the document with new values
     await setDoc(
       docRef,
@@ -82,7 +82,7 @@ export default function Home() {
           <Stack width="1000px" height="500px" spacing={2} overflow={"auto"}>
             {pantry.map((item) => (
               <Box
-                key={item.name}
+                key={item.id}
                 width="100%"
                 minHeight="150px"
                 display={"flex"}
@@ -98,6 +98,7 @@ export default function Home() {
                   textAlign={"center"}
                   fontWeight={"lighter"}
                 >
+                  {console.log('itemmmmm', item)}
                   {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
                 </Typography>
                 <Typography
@@ -119,7 +120,7 @@ export default function Home() {
 
                 <Button
                   variant="contained"
-                  onClick={() => deleteItem(item.id)}
+                  onClick={() => deleteItem(item.name)}
                 >
                   Remove
                 </Button>
