@@ -29,14 +29,17 @@ const style = {
 const AddModal = ({ item, updatePantry }) => {
   const [open, setOpen] = React.useState(false);
   const [itemName, setItemName] = useState(item || "");
+  const [quantity, setQuantity] = useState(1); // Default quantity
+
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const addItem = async (item) => {
+  const addItem = async (item, qty) => {
+    console.log('iteeeemmmmm', item)
     const docRef = doc(collection(firestore, 'pantry'), item) 
-    await setDoc(docRef, {})
-    updatePantry()
+    await setDoc(docRef, {quantity:qty})
+    await updatePantry()
   };
 
   
@@ -55,6 +58,7 @@ const AddModal = ({ item, updatePantry }) => {
           <Typography id="modal-modal-title" variant="h6" component="h2">
             Add Item
           </Typography>
+         
 
           <Stack width="100%" direction={"row"} spacing={2}>
             <TextField
@@ -65,11 +69,20 @@ const AddModal = ({ item, updatePantry }) => {
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
             />
+             <TextField
+              id="outlined-basic"
+              label="Quantity"
+              variant="outlined"
+              fullWidth
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+            />
             <Button
               variant="outlined"
               onClick={() => {
-                addItem(itemName);
+                addItem(itemName, quantity);
                 setItemName("");
+                setQuantity(1)
                 handleClose();
               }}
             >

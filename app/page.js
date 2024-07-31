@@ -16,9 +16,9 @@ export default function Home() {
     const pantryList = [];
     docs.forEach((doc) => {
       // console.log(doc.id);
-      pantryList.push(doc.id);
+      pantryList.push({name:doc.id, ...doc.data()});
     });
-    console.log(pantryList);
+    console.log('pantryList', pantryList);
     setPantry(pantryList);
   };
 
@@ -26,12 +26,10 @@ export default function Home() {
     updatePantry();
   }, []);
 
-  const deleteItem = async (item) => {
-    const docRef = doc(collection(firestore, "pantry"), item);
-    deleteDoc(docRef).then(()=>{
-      updatePantry();
-    });
-    
+  const deleteItem = async (itemName) => {
+    const docRef = doc(collection(firestore, "pantry"), itemName);
+    await deleteDoc(docRef)
+    await updatePantry()
   };
 
   return (
@@ -48,15 +46,15 @@ export default function Home() {
         <AddModal updatePantry={updatePantry} />
 
         <Box border={"1px solid #333"}>
-          <Box width="800px" height="100px" bgcolor={"#0096c7"}>
+          <Box width="1000px" height="100px" bgcolor={"#0096c7"}>
             <Typography variant={"h2"} color={"#333"} textAlign={"center"}>
               Pantry Patrol
             </Typography>
           </Box>
-          <Stack width="800px" height="300px" spacing={2} overflow={"auto"}>
+          <Stack width="1000px" height="500px" spacing={2} overflow={"auto"}>
             {pantry.map((item) => (
               <Box
-                key={item}
+                key={item.name}
                 width="100%"
                 minHeight="150px"
                 display={"flex"}
@@ -72,10 +70,14 @@ export default function Home() {
                   textAlign={"center"}
                   fontWeight={"lighter"}
                 >
-                  {item.charAt(0).toUpperCase() + item.slice(1)}
+                  {item.name.charAt(0).toUpperCase() + item.name.slice(1)} 
                 </Typography>
+                <Typography variant="h3"
+                  color={"#333"}
+                  textAlign={"center"}
+                  fontWeight={"lighter"}> Quantity:{item.quantity}</Typography>
 
-                <Button variant="contained" onClick={() => deleteItem(item)}>
+                <Button variant="contained" onClick={() => deleteItem(item.name)}>
                   Remove
                 </Button>
               </Box>
