@@ -3,12 +3,16 @@ import * as React from "react";
 
 import { Box, Stack, Typography, Button } from "@mui/material";
 import { firestore } from "@/firebase";
-import { collection, query, getDocs, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, getDocs, deleteDoc, doc, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import AddModal from "./AddModal";
+import UpdateModal from "./UpdateModal";
 
 export default function Home() {
   const [pantry, setPantry] = useState([]);
+  const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  console.log('selectedItem', selectedItem)
 
   const updatePantry = async () => {
     const snapshot = query(collection(firestore, "pantry"));
@@ -16,9 +20,9 @@ export default function Home() {
     const pantryList = [];
     docs.forEach((doc) => {
       // console.log(doc.id);
-      pantryList.push({name:doc.id, ...doc.data()});
+      pantryList.push({ id: doc.id, ...doc.data() });
     });
-    console.log('pantryList', pantryList);
+    console.log("pantryList", pantryList);
     setPantry(pantryList);
   };
 
@@ -26,10 +30,34 @@ export default function Home() {
     updatePantry();
   }, []);
 
-  const deleteItem = async (itemName) => {
-    const docRef = doc(collection(firestore, "pantry"), itemName);
-    await deleteDoc(docRef)
-    await updatePantry()
+  const deleteItem = async (itemId) => {
+    const docRef = doc(collection(firestore, "pantry"), itemId);
+    await deleteDoc(docRef);
+    await updatePantry();
+  };
+
+  const updateItem = async (itemId, newName, newQuantity) => {
+    //create a ref to the item in firestore
+    const docRef = doc(collection(firestore, "pantry"), itemId);
+    //update the document with new values
+    await setDoc(
+      docRef,
+      { name: newName, quantity: newQuantity },
+      { merge: true }
+    );
+
+    //refresh pantryList
+    await updatePantry();
+  };
+
+  const openUpdateModal = (item) => {
+    setSelectedItem(item);
+    setUpdateModalOpen(true);
+  };
+
+  const closeUpdatedModal = () => {
+    setSelectedItem(null);
+    setUpdateModalOpen(false);
   };
 
   return (
@@ -61,8 +89,8 @@ export default function Home() {
                 justifyContent={"space-between"}
                 alignItems={"center"}
                 bgcolor={"#f0f0f0"}
-                paddingX = {5}
-                sx={{ boxSizing: 'border-box' }}
+                paddingX={5}
+                sx={{ boxSizing: "border-box" }}
               >
                 <Typography
                   variant="h3"
@@ -70,21 +98,48 @@ export default function Home() {
                   textAlign={"center"}
                   fontWeight={"lighter"}
                 >
-                  {item.name.charAt(0).toUpperCase() + item.name.slice(1)} 
+                  {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
                 </Typography>
-                <Typography variant="h3"
+                <Typography
+                  variant="h3"
                   color={"#333"}
                   textAlign={"center"}
-                  fontWeight={"lighter"}> Quantity:{item.quantity}</Typography>
+                  fontWeight={"lighter"}
+                >
+                  {" "}
+                  Quantity:{item.quantity}
+                </Typography>
 
-                <Button variant="contained" onClick={() => deleteItem(item.name)}>
+                <Button
+                  variant="contained"
+                  onClick={() => openUpdateModal(item)}
+                >
+                  Edit
+                </Button>
+
+                <Button
+                  variant="contained"
+                  onClick={() => deleteItem(item.id)}
+                >
                   Remove
                 </Button>
+
+                <UpdateModal />
               </Box>
             ))}
           </Stack>
         </Box>
       </Box>
+      {
+        selectedItem && (
+          <UpdateModal
+          open={isUpdateModalOpen}
+          handleClose={closeUpdatedModal}
+          item={selectedItem}
+          updateItem ={updateItem}
+          />
+        )
+      }
     </>
   );
 }
