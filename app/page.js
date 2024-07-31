@@ -1,43 +1,39 @@
 "use client";
-import * as React from 'react';
+import * as React from "react";
 
-import { Box, Stack, Typography, Button, Modal } from "@mui/material";
+import { Box, Stack, Typography, Button } from "@mui/material";
 import { firestore } from "@/firebase";
-import { collection, query, getDocs } from "firebase/firestore";
+import { collection, query, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import AddModal from "./AddModal";
 
-
-const style = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  p: 4,
-};
 export default function Home() {
   const [pantry, setPantry] = useState([]);
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+
+  const updatePantry = async () => {
+    const snapshot = query(collection(firestore, "pantry"));
+    const docs = await getDocs(snapshot);
+    const pantryList = [];
+    docs.forEach((doc) => {
+      // console.log(doc.id);
+      pantryList.push(doc.id);
+    });
+    console.log(pantryList);
+    setPantry(pantryList);
+  };
 
   useEffect(() => {
-    const updatePantry = async () => {
-      const snapshot = query(collection(firestore, "pantry"));
-      const docs = await getDocs(snapshot);
-      const pantryList = [];
-      docs.forEach((doc) => {
-        // console.log(doc.id);
-        pantryList.push(doc.id);
-      });
-      console.log(pantryList);
-      setPantry(pantryList);
-    };
     updatePantry();
   }, []);
+
+  const deleteItem = async (item) => {
+    const docRef = doc(collection(firestore, "pantry"), item);
+    deleteDoc(docRef).then(()=>{
+      updatePantry();
+    });
+    
+  };
+
   return (
     <>
       <Box
@@ -49,23 +45,7 @@ export default function Home() {
         flexDirection={"column"}
         gap={2}
       >
-        <Button variant="contained" onClick={handleOpen}>ADD</Button>
-        <Modal
-          open={open}
-          onClose={handleClose}
-          aria-labelledby="modal-modal-title"
-          aria-describedby="modal-modal-description"
-        >
-          <Box sx={style}>
-            <Typography id="modal-modal-title" variant="h6" component="h2">
-              Text in a modal
-            </Typography>
-            <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-              Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
-            </Typography>
-          </Box>
-        </Modal>
-
+        <AddModal updatePantry={updatePantry} />
 
         <Box border={"1px solid #333"}>
           <Box width="800px" height="100px" bgcolor={"#0096c7"}>
@@ -78,15 +58,26 @@ export default function Home() {
               <Box
                 key={item}
                 width="100%"
-                height="300px"
+                minHeight="150px"
                 display={"flex"}
-                justifyContent={"center"}
+                justifyContent={"space-between"}
                 alignItems={"center"}
                 bgcolor={"#f0f0f0"}
+                paddingX = {5}
+                sx={{ boxSizing: 'border-box' }}
               >
-                <Typography variant="h4" color={"#333"} textAlign={"center"}>
+                <Typography
+                  variant="h3"
+                  color={"#333"}
+                  textAlign={"center"}
+                  fontWeight={"lighter"}
+                >
                   {item.charAt(0).toUpperCase() + item.slice(1)}
                 </Typography>
+
+                <Button variant="contained" onClick={() => deleteItem(item)}>
+                  Remove
+                </Button>
               </Box>
             ))}
           </Stack>
