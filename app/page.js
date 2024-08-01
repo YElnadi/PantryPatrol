@@ -1,146 +1,215 @@
 "use client";
 import * as React from "react";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { IconButton } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
 
-import { Box, Stack, Typography, Button } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Typography,
+  Button,
+  Grid,
+  Modal,
+  TextField,
+} from "@mui/material";
 import { firestore } from "@/firebase";
-import { collection, query, getDocs, deleteDoc, doc, setDoc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  getDocs,
+  getDoc,
+  deleteDoc,
+  doc,
+  setDoc,
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
-import AddModal from "./AddModal";
 import UpdateModal from "./UpdateModal";
+// import AddModal from "./AddModal";
+// import UpdateModal from "./UpdateModal";
 
 export default function Home() {
-  const [pantry, setPantry] = useState([]);
-  const [isUpdateModalOpen, setUpdateModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  console.log('selectedItem', selectedItem)
+  const [inventory, setInventory] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [itemName, setItemName] = useState("");
+  const [currentItem, setCurrentItem] = useState(null);
 
-  const updatePantry = async () => {
-    const snapshot = query(collection(firestore, "pantry"));
+
+  const updateInventory = async () => {
+    const snapshot = query(collection(firestore, "inventory"));
     const docs = await getDocs(snapshot);
-    const pantryList = [];
+    const inventoryList = [];
     docs.forEach((doc) => {
-      // console.log(doc.id);
-      pantryList.push({ name: doc.id, ...doc.data() });
+      inventoryList.push({
+        name: doc.id,
+        ...doc.data(),
+      });
     });
-    console.log("pantryList", pantryList);
-    setPantry(pantryList);
+    console.log("inventorylist###", inventoryList);
+    setInventory(inventoryList);
   };
 
+  //will run only once when page upload
   useEffect(() => {
-    updatePantry();
+    console.log("in use effect");
+    updateInventory();
   }, []);
 
-  const deleteItem = async (itemName) => {
-    const docRef = doc(collection(firestore, "pantry"), itemName);
-    await deleteDoc(docRef);
-    await updatePantry();
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+
+  //remove item from Inventory
+  const deleteItem = async (item) => {
+    const docRef = doc(collection(firestore, "inventory"), item);
+    // console.log(`in delete; itemName: "${itemName}" docRef: ${docRef}`)
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const { quantity } = docSnap.data();
+      if (quantity === 1) {
+        await deleteDoc(docRef);
+      } else {
+        await setDoc(docRef, { quantity: quantity - 1 });
+      }
+    }
+    await updateInventory();
   };
 
+  //Add Item
+  const addItem = async (item) => {
+    const docRef = doc(collection(firestore, "inventory"), item);
+    // console.log(`in delete; itemName: "${itemName}" docRef: ${docRef}`)
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const { quantity } = docSnap.data();
+      await setDoc(docRef, { quantity: quantity + 1 });
+    } else {
+      await setDoc(docRef, { quantity: 1 });
+    }
+    await updateInventory();
+  };
+
+  //update data
   const updateItem = async (itemName, newName, newQuantity) => {
-    //create a ref to the item in firestore
-    const docRef = doc(collection(firestore, "pantry"), itemName);
-    //update the document with new values
+    const docRef = doc(collection(firestore, "inventory"), itemName);
     await setDoc(
       docRef,
       { name: newName, quantity: newQuantity },
       { merge: true }
     );
-
-    //refresh pantryList
-    await updatePantry();
-  };
-
-  const openUpdateModal = (item) => {
-    setSelectedItem(item);
-    setUpdateModalOpen(true);
-  };
-
-  const closeUpdatedModal = () => {
-    setSelectedItem(null);
-    setUpdateModalOpen(false);
+    await updateInventory();
   };
 
   return (
-    <>
-      <Box
-        display={"flex"}
-        height="100vh"
-        width="100vw"
-        justifyContent={"center"}
-        alignItems={"center"}
-        flexDirection={"column"}
-        gap={2}
-      >
-        <AddModal updatePantry={updatePantry} />
-
-        <Box border={"1px solid #333"}>
-          <Box width="1000px" height="100px" bgcolor={"#0096c7"}>
-            <Typography variant={"h2"} color={"#333"} textAlign={"center"}>
-              Pantry Patrol
-            </Typography>
-          </Box>
-          <Stack width="1000px" height="500px" spacing={2} overflow={"auto"}>
-            {pantry.map((item) => (
-              <Box
-                key={item.id}
-                width="100%"
-                minHeight="150px"
-                display={"flex"}
-                justifyContent={"space-between"}
-                alignItems={"center"}
-                bgcolor={"#f0f0f0"}
-                paddingX={5}
-                sx={{ boxSizing: "border-box" }}
-              >
-                <Typography
-                  variant="h3"
-                  color={"#333"}
-                  textAlign={"center"}
-                  fontWeight={"lighter"}
-                >
-                  {console.log('itemmmmm', item)}
-                  {item.name.charAt(0).toUpperCase() + item.name.slice(1)}
-                </Typography>
-                <Typography
-                  variant="h3"
-                  color={"#333"}
-                  textAlign={"center"}
-                  fontWeight={"lighter"}
-                >
-                  {" "}
-                  Quantity:{item.quantity}
-                </Typography>
-
-                <Button
-                  variant="contained"
-                  onClick={() => openUpdateModal(item)}
-                >
-                  Edit
-                </Button>
-
-                <Button
-                  variant="contained"
-                  onClick={() => deleteItem(item.name)}
-                >
-                  Remove
-                </Button>
-
-                <UpdateModal />
-              </Box>
-            ))}
+    <Box
+      width="100vw"
+      height="100vh"
+      display={"flex"}
+      flexDirection={"column"}
+      justifyContent={"center"}
+      alignItems={"center"}
+      gap={2}
+    >
+      {/* <UpdateModal
+      open={open}
+      handleClose={handleClose}
+      item={currentItem}
+      updateItem={updateItem}
+      /> */}
+      <Modal open={open} onClose={handleClose}>
+        <Box
+          position="absolute"
+          top="50%"
+          left="50%"
+          width={400}
+          bgcolor="white"
+          border="2px solid #000"
+          boxShadow={24}
+          p={4}
+          display="flex"
+          flexDirection="column"
+          gap={3}
+          sx={{ transform: "translate(-50%, -50%)" }}
+        >
+          <Typography variant="h6">Add Item</Typography>
+          <Stack width="100%" direction="row" spacing={2}>
+            <TextField
+              variant="outlined"
+              fullWidth
+              value={itemName}
+              onChange={(e) => {
+                setItemName(e.target.value);
+              }}
+            />
+            <Button
+              variant="outlined"
+              DeleteIcon
+              onClick={() => {
+                addItem(itemName);
+                setItemName("");
+                handleClose();
+              }}
+            >
+              Add
+            </Button>
           </Stack>
         </Box>
+      </Modal>
+      <Button variant="contained" onClick={() => handleOpen()}>
+        Add New Item
+      </Button>
+      <Box sx={{ border: "1px solid #333" }}>
+        <Box
+          width="800px"
+          height="100px"
+          bgcolor="#ADD8E6"
+          alignItems="center"
+          justifyContent="center"
+          display="flex"
+        >
+          <Typography variant="h2" color="#333">
+            Inventory Items
+          </Typography>
+        </Box>
+        <Stack width="800px" height="300px" spacing={2} overflow="auto">
+          {inventory.map(({ name, quantity }) => (
+            <Box
+              key={name}
+              width="96%"
+              minHeight="150px"
+              display="flex"
+              alignItems="center"
+              justifyContent="space-between"
+              bgcolor="#f0f0f0"
+              padding={2}
+            >
+                <Typography variant="h3" color="#333" >
+                  {name.charAt(0).toUpperCase() + name.slice(1)}
+                </Typography>
+                <Typography variant="h3" color="#333" >
+                  {quantity}
+                </Typography>
+              <Box display={"flex"} justifyContent={"space-around"}>
+                <IconButton
+                  onClick={() => {
+                    setCurrentItem({name, quantity});
+                    handleOpen();
+                  }}
+                >
+                  <EditIcon sx={{ fontSize: 40, color: "blue" }} />
+                </IconButton>
+
+                <IconButton
+                  onClick={() => {
+                    deleteItem(name);
+                  }}
+                >
+                  <DeleteIcon sx={{ fontSize: 40, color: "blue" }} />
+                </IconButton>
+              </Box>
+            </Box>
+          ))}
+        </Stack>
       </Box>
-      {
-        selectedItem && (
-          <UpdateModal
-          open={isUpdateModalOpen}
-          handleClose={closeUpdatedModal}
-          item={selectedItem}
-          updateItem ={updateItem}
-          />
-        )
-      }
-    </>
+    </Box>
   );
 }

@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Modal from '@mui/material/Modal';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Stack, TextField } from '@mui/material';
 const style = {
     position: 'absolute',
@@ -17,9 +17,14 @@ const style = {
     p: 4,
   };
 
-const UpdateModal = ({open, handleClose, item={}, updateItem}) =>{
-  const [newName, setNewName] = useState(item.name || "");
-  const [newQuantity, setNewQuantity] = useState(item.quantity || "");
+const UpdateModal = ({open, handleClose, item, updateItem}) =>{
+  const [newName, setNewName] = useState(item);
+  const [newQuantity, setNewQuantity] = useState(item.quantity);
+
+   useEffect(()=>{
+    setNewName(item.name)
+    setNewQuantity(item.quantity)
+  },[item])
 
   const handleUpdate = () =>{
     updateItem(item.name, newName, newQuantity);
