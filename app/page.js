@@ -39,6 +39,8 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
+  const [modalMode, setModalMode] = useState("add")
+
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
     const docs = await getDocs(snapshot);
@@ -59,23 +61,35 @@ export default function Home() {
     updateInventory();
   }, []);
 
-  const handleOpen = () => setOpen(true);
+  const handleOpen = (item = null) => {
+    if(item){
+      setCurrentItem(item);
+      setItemName(item.name);
+      setItemQuantity(item.quantity);
+      setModalMode("update")
+    }else{
+      setItemName("")
+      setItemQuantity("")
+      setModalMode("add");
+    }
+    setErrorMessage("");
+    setOpen(true);
+  };
   const handleClose = () => setOpen(false);
 
-  //remove item from Inventory
+  //Delete item from Inventory
   const deleteItem = async (itemName) => {
     const docRef = doc(collection(firestore, "inventory"), itemName);
-
     // Check if the document exists
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       // Delete the document regardless of quantity
       await deleteDoc(docRef);
     }
-
     // Update the inventory after deletion
     await updateInventory();
   };
+
 
   //Add Item
   const addItem = async (itemName, itemQuantity) => {
@@ -91,6 +105,7 @@ export default function Home() {
     await updateInventory();
   };
 
+  //handle add item
   const handleAddItem = async () => {
     setErrorMessage("");
 
@@ -105,29 +120,92 @@ export default function Home() {
       setErrorMessage("Name already exists. Please choose a different name.");
     } else {
       await addItem(itemName, itemQuantity);
-      setItemName("");
-      setItemQuantity("");
       handleClose();
     }
   };
 
-  const handleCloseModal = () => {
+  //handle update item
+  const handleUpdateItem = async () =>{
+    setErrorMessage("")
     if (!itemName.trim() || itemQuantity <= 0) {
       setErrorMessage("Please enter a valid name and quantity.");
       return;
     }
-    handleClose();
-  };
-  //update data
-  const updateItem = async (itemName, newName, newQuantity) => {
-    const docRef = doc(collection(firestore, "inventory"), itemName);
-    await setDoc(
-      docRef,
-      { name: newName, quantity: newQuantity },
-      { merge: true }
-    );
+
+    if(modalMode === "update"){
+      const{name:oldName} = currentItem;
+      if(itemName !== oldName){
+        const newDocRef = doc(collection(firestore, "inventory"), itemName);
+        const newDocSnap = await getDoc(newDocRef)
+
+        if(newDocSnap.exists()){
+          setErrorMessage("Name already exists. Please choose a different name. ")
+          return;
+        }
+      }
+      //update item
+      const oldDocRef = doc(collection(firestore, "inventory"), oldName);
+      await setDoc(oldDocRef, {quantity:itemQuantity}, {merge:true});
+
+      if(itemName !== oldName){
+        await deleteDoc(doc(collection(firestore, "inventory"), oldName));
+      }
+     
+    }
     await updateInventory();
-  };
+    handleClose()
+  }
+
+  // const handleCloseModal = () => {
+  //   if (!itemName.trim() || itemQuantity <= 0) {
+  //     setErrorMessage("Please enter a valid name and quantity.");
+  //     return;
+  //   }
+  //   handleClose();
+  // };
+  //update data
+  // const updateItem = async (oldName, newName, newQuantity) => {
+  //   // Check if new name already exists
+  //   if (newName) {
+  //     const newDocRef = doc(collection(firestore, "inventory"), newName);
+  //     const newDocSnap = await getDoc(newDocRef);
+  
+  //     if (newDocSnap.exists()) {
+  //       // If new name already exists, show an error message and return
+  //       setErrorMessage("Name already exists. Please choose a different name.");
+  //       return;
+  //     }
+  //   }
+  
+  //   // Check if the item with the old name exists
+  //   const oldDocRef = doc(collection(firestore, "inventory"), oldName);
+  //   const oldDocSnap = await getDoc(oldDocRef);
+  
+  //   if (oldDocSnap.exists()) {
+  //     // Prepare update data
+  //     const updateData = {};
+  //     if (newName) updateData.name = newName;
+  //     if (newQuantity !== undefined) updateData.quantity = newQuantity;
+  
+  //     // Perform the update
+  //     await setDoc(oldDocRef, updateData, { merge: true });
+  
+  //     // If the name is updated, delete the old document and rename it
+  //     if (newName && newName !== oldName) {
+  //       await deleteDoc(doc(collection(firestore, "inventory"), oldName));
+  //     }
+  
+  //     // Refresh the inventory list
+  //     await updateInventory();
+  //   } else {
+  //     // Show an error message if the item to be updated does not exist
+  //     setErrorMessage("Item not found.");
+  //   }
+  // };
+  
+
+
+
 
   //filter inventory
   const filteredInventory = inventory.filter((item) =>
@@ -193,8 +271,8 @@ export default function Home() {
                 setErrorMessage("");
               }}
             />
-            <Button variant="outlined" DeleteIcon onClick={handleAddItem}>
-              Add
+            <Button variant="outlined" onClick={modalMode === "add" ? handleAddItem : handleUpdateItem} >
+              {modalMode === "add" ? "Add": "Update"}
             </Button>
           </Stack>
           {errorMessage && (
@@ -282,10 +360,7 @@ export default function Home() {
               </Grid>
               <Box display={"flex"} justifyContent={"space-around"} p={2}>
                 <IconButton
-                  onClick={() => {
-                    setCurrentItem({ name, quantity });
-                    handleOpen();
-                  }}
+                onClick={() => handleOpen({ name, quantity })}
                 >
                   <EditIcon sx={{ fontSize: 40, color: "blue" }} />
                 </IconButton>
