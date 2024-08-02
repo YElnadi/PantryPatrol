@@ -287,7 +287,7 @@ export default function Home() {
         </Box>
       </Modal>
       <Box
-        bgcolor="white"
+        bgcolor="#c5a4e4"
         display="flex"
         width="900px"
         padding={2}
@@ -324,7 +324,7 @@ export default function Home() {
         <Box
           width="1000px"
           height="100px"
-          bgcolor="#ADD8E6"
+          bgcolor="#c5a4e4"
           alignItems="center"
           justifyContent="center"
           display="flex"
