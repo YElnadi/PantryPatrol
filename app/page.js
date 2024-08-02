@@ -221,8 +221,16 @@ export default function Home() {
       justifyContent={"center"}
       alignItems={"center"}
       gap={2}
-      bgcolor={"yellow"}
       overflow={"hidden"}
+      
+      sx={{
+        backgroundImage: `url('/inv3.jpg')`, // Ensure the path is correct
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: `no-repeat`,
+        overflow: "hidden",
+      }}
+      
     >
       {/* <UpdateModal
       open={open}
@@ -271,7 +279,7 @@ export default function Home() {
                 setErrorMessage("");
               }}
             />
-            <Button variant="outlined" onClick={modalMode === "add" ? handleAddItem : handleUpdateItem} >
+            <Button variant="contained" onClick={modalMode === "add" ? handleAddItem : handleUpdateItem} >
               {modalMode === "add" ? "Add": "Update"}
             </Button>
           </Stack>
@@ -282,18 +290,28 @@ export default function Home() {
           )}
         </Box>
       </Modal>
-      <Stack spacing={2} direction="row">
-        <Button variant="contained" onClick={() => handleOpen()}>
+      <Box bgcolor='white' display ='flex'width='900px' padding ={2} justifyContent={'space-evenly'} alignItems={'center'} borderRadius= '8px'>
+      <Stack spacing={2} direction="row" alignItems={'center'}>
+        <Button variant="contained" sx={{
+            borderRadius: '8px', 
+            padding: '8px 16px', 
+          }} onClick={() => handleOpen()}>
           Add New Item
         </Button>
         <TextField
+        
           variant="outlined"
           placeholder="Search Items"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ marginBottom: 2 }}
+          sx={{
+            borderRadius: '8px', // Rounded corners
+            marginBottom: 2,
+            padding: '3px', // Adjust padding for better look
+          }}
         />
       </Stack>
+      </Box>
 
       <Box>
         <Box
