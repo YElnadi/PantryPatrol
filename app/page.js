@@ -34,7 +34,6 @@ export default function Home() {
   const [itemName, setItemName] = useState("");
   const [currentItem, setCurrentItem] = useState(null);
 
-
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
     const docs = await getDocs(snapshot);
@@ -120,7 +119,7 @@ export default function Home() {
           position="absolute"
           top="50%"
           left="50%"
-          width={400}
+          width={600}
           bgcolor="white"
           border="2px solid #000"
           boxShadow={24}
@@ -157,7 +156,7 @@ export default function Home() {
       <Button variant="contained" onClick={() => handleOpen()}>
         Add New Item
       </Button>
-      <Box sx={{ border: "1px solid #333" }}>
+      <Box>
         <Box
           width="800px"
           height="100px"
@@ -170,28 +169,35 @@ export default function Home() {
             Inventory Items
           </Typography>
         </Box>
-        <Stack width="800px" height="300px" spacing={2} overflow="auto">
+        <Stack width="800px" height="500px" spacing={2} overflow="auto">
           {inventory.map(({ name, quantity }) => (
             <Box
               key={name}
               width="96%"
-              minHeight="150px"
+              // minHeight="150px"
               display="flex"
-              alignItems="center"
+              // alignItems="center"
               justifyContent="space-between"
-              bgcolor="#f0f0f0"
+              bgcolor="pink"
               padding={2}
             >
-                <Typography variant="h3" color="#333" >
+              <Grid container rowSpacing={1} columnSpacing={{xs:1, sm:2, md:3}} padding={2}>
+                <Grid xs={6}>
+                <Typography variant="h3" color="#333">
                   {name.charAt(0).toUpperCase() + name.slice(1)}
                 </Typography>
-                <Typography variant="h3" color="#333" >
+                </Grid>
+                <Grid xs={6}>
+                     <Typography variant="h3" color="#333">
                   {quantity}
                 </Typography>
+                </Grid>
+             
+              </Grid>
               <Box display={"flex"} justifyContent={"space-around"}>
                 <IconButton
                   onClick={() => {
-                    setCurrentItem({name, quantity});
+                    setCurrentItem({ name, quantity });
                     handleOpen();
                   }}
                 >
