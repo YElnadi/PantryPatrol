@@ -22,7 +22,6 @@ import {
   deleteDoc,
   doc,
   setDoc,
-  
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import UpdateModal from "./UpdateModal";
@@ -39,7 +38,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  const [modalMode, setModalMode] = useState("add")
+  const [modalMode, setModalMode] = useState("add");
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
@@ -62,14 +61,14 @@ export default function Home() {
   }, []);
 
   const handleOpen = (item = null) => {
-    if(item){
+    if (item) {
       setCurrentItem(item);
       setItemName(item.name);
       setItemQuantity(item.quantity);
-      setModalMode("update")
-    }else{
-      setItemName("")
-      setItemQuantity("")
+      setModalMode("update");
+    } else {
+      setItemName("");
+      setItemQuantity("");
       setModalMode("add");
     }
     setErrorMessage("");
@@ -89,7 +88,6 @@ export default function Home() {
     // Update the inventory after deletion
     await updateInventory();
   };
-
 
   //Add Item
   const addItem = async (itemName, itemQuantity) => {
@@ -125,36 +123,37 @@ export default function Home() {
   };
 
   //handle update item
-  const handleUpdateItem = async () =>{
-    setErrorMessage("")
+  const handleUpdateItem = async () => {
+    setErrorMessage("");
     if (!itemName.trim() || itemQuantity <= 0) {
       setErrorMessage("Please enter a valid name and quantity.");
       return;
     }
 
-    if(modalMode === "update"){
-      const{name:oldName} = currentItem;
-      if(itemName !== oldName){
+    if (modalMode === "update") {
+      const { name: oldName } = currentItem;
+      if (itemName !== oldName) {
         const newDocRef = doc(collection(firestore, "inventory"), itemName);
-        const newDocSnap = await getDoc(newDocRef)
+        const newDocSnap = await getDoc(newDocRef);
 
-        if(newDocSnap.exists()){
-          setErrorMessage("Name already exists. Please choose a different name. ")
+        if (newDocSnap.exists()) {
+          setErrorMessage(
+            "Name already exists. Please choose a different name. "
+          );
           return;
         }
       }
       //update item
       const oldDocRef = doc(collection(firestore, "inventory"), oldName);
-      await setDoc(oldDocRef, {quantity:itemQuantity}, {merge:true});
+      await setDoc(oldDocRef, { quantity: itemQuantity }, { merge: true });
 
-      if(itemName !== oldName){
+      if (itemName !== oldName) {
         await deleteDoc(doc(collection(firestore, "inventory"), oldName));
       }
-     
     }
     await updateInventory();
-    handleClose()
-  }
+    handleClose();
+  };
 
   // const handleCloseModal = () => {
   //   if (!itemName.trim() || itemQuantity <= 0) {
@@ -169,32 +168,32 @@ export default function Home() {
   //   if (newName) {
   //     const newDocRef = doc(collection(firestore, "inventory"), newName);
   //     const newDocSnap = await getDoc(newDocRef);
-  
+
   //     if (newDocSnap.exists()) {
   //       // If new name already exists, show an error message and return
   //       setErrorMessage("Name already exists. Please choose a different name.");
   //       return;
   //     }
   //   }
-  
+
   //   // Check if the item with the old name exists
   //   const oldDocRef = doc(collection(firestore, "inventory"), oldName);
   //   const oldDocSnap = await getDoc(oldDocRef);
-  
+
   //   if (oldDocSnap.exists()) {
   //     // Prepare update data
   //     const updateData = {};
   //     if (newName) updateData.name = newName;
   //     if (newQuantity !== undefined) updateData.quantity = newQuantity;
-  
+
   //     // Perform the update
   //     await setDoc(oldDocRef, updateData, { merge: true });
-  
+
   //     // If the name is updated, delete the old document and rename it
   //     if (newName && newName !== oldName) {
   //       await deleteDoc(doc(collection(firestore, "inventory"), oldName));
   //     }
-  
+
   //     // Refresh the inventory list
   //     await updateInventory();
   //   } else {
@@ -202,10 +201,6 @@ export default function Home() {
   //     setErrorMessage("Item not found.");
   //   }
   // };
-  
-
-
-
 
   //filter inventory
   const filteredInventory = inventory.filter((item) =>
@@ -222,7 +217,6 @@ export default function Home() {
       alignItems={"center"}
       gap={2}
       overflow={"hidden"}
-      
       sx={{
         backgroundImage: `url('/inv3.jpg')`, // Ensure the path is correct
         backgroundSize: "cover",
@@ -230,7 +224,6 @@ export default function Home() {
         backgroundRepeat: `no-repeat`,
         overflow: "hidden",
       }}
-      
     >
       {/* <UpdateModal
       open={open}
@@ -279,8 +272,11 @@ export default function Home() {
                 setErrorMessage("");
               }}
             />
-            <Button variant="contained" onClick={modalMode === "add" ? handleAddItem : handleUpdateItem} >
-              {modalMode === "add" ? "Add": "Update"}
+            <Button
+              variant="contained"
+              onClick={modalMode === "add" ? handleAddItem : handleUpdateItem}
+            >
+              {modalMode === "add" ? "Add" : "Update"}
             </Button>
           </Stack>
           {errorMessage && (
@@ -290,27 +286,38 @@ export default function Home() {
           )}
         </Box>
       </Modal>
-      <Box bgcolor='white' display ='flex'width='900px' padding ={2} justifyContent={'space-evenly'} alignItems={'center'} borderRadius= '8px'>
-      <Stack spacing={2} direction="row" alignItems={'center'}>
-        <Button variant="contained" sx={{
-            borderRadius: '8px', 
-            padding: '8px 16px', 
-          }} onClick={() => handleOpen()}>
-          Add New Item
-        </Button>
-        <TextField
-        
-          variant="outlined"
-          placeholder="Search Items"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{
-            borderRadius: '8px', // Rounded corners
-            marginBottom: 2,
-            padding: '3px', // Adjust padding for better look
-          }}
-        />
-      </Stack>
+      <Box
+        bgcolor="white"
+        display="flex"
+        width="900px"
+        padding={2}
+        justifyContent={"space-evenly"}
+        alignItems={"center"}
+        borderRadius="8px"
+      >
+        <Stack spacing={2} direction="row" alignItems={"center"}>
+          <Button
+            variant="contained"
+            sx={{
+              borderRadius: "8px",
+              padding: "8px 16px",
+            }}
+            onClick={() => handleOpen()}
+          >
+            Add New Item
+          </Button>
+          <TextField
+            variant="outlined"
+            placeholder="Search Items"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{
+              borderRadius: "8px", // Rounded corners
+              marginBottom: 2,
+              padding: "3px", // Adjust padding for better look
+            }}
+          />
+        </Stack>
       </Box>
 
       <Box>
@@ -323,7 +330,7 @@ export default function Home() {
           display="flex"
         >
           <Typography variant="h2" color="#333">
-            Inventory Items
+            Pantry Patrol{" "}
           </Typography>
         </Box>
         <Stack
@@ -377,9 +384,7 @@ export default function Home() {
                 </Grid>
               </Grid>
               <Box display={"flex"} justifyContent={"space-around"} p={2}>
-                <IconButton
-                onClick={() => handleOpen({ name, quantity })}
-                >
+                <IconButton onClick={() => handleOpen({ name, quantity })}>
                   <EditIcon sx={{ fontSize: 40, color: "blue" }} />
                 </IconButton>
 
