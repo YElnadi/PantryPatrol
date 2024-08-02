@@ -3,4 +3,41 @@
   padding: 0;
   margin: 0;
 }
+/* Webkit-based browsers (Chrome, Safari) */
+::-webkit-scrollbar {
+  width: 0px;  /* Hide the scrollbar */
+  height: 0px; /* Hide the scrollbar */
+}
+
+.container:hover::-webkit-scrollbar {
+  width: 8px;  /* Show scrollbar on hover */
+  height: 8px; /* Show scrollbar on hover */
+}
+
+.container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.5); /* Customize scrollbar thumb */
+  border-radius: 10px; /* Rounded scrollbar thumb */
+}
+
+.container:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.7); /* Change color on hover */
+}
+
+/* Firefox */
+.container {
+  scrollbar-width: none;  /* Hide scrollbar */
+}
+
+.container:hover {
+  scrollbar-width: auto;  /* Show scrollbar */
+}
+
+.container::-moz-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.5); /* Customize scrollbar thumb */
+  border-radius: 10px; /* Rounded scrollbar thumb */
+}
+
+.container:hover::-moz-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.7); /* Change color on hover */
+}
 

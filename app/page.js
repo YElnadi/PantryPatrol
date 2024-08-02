@@ -4,6 +4,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 
+
+
+
 import {
   Box,
   Stack,
@@ -32,7 +35,10 @@ export default function Home() {
   const [inventory, setInventory] = useState([]);
   const [open, setOpen] = useState(false);
   const [itemName, setItemName] = useState("");
+  const [itemQuantity, setItemQuantity] = useState("");
+
   const [currentItem, setCurrentItem] = useState(null);
+  const [searchTerm, setSearchTerm]=useState("");
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
@@ -58,31 +64,31 @@ export default function Home() {
   const handleClose = () => setOpen(false);
 
   //remove item from Inventory
-  const deleteItem = async (item) => {
-    const docRef = doc(collection(firestore, "inventory"), item);
-    // console.log(`in delete; itemName: "${itemName}" docRef: ${docRef}`)
+  const deleteItem = async (itemName) => {
+    const docRef = doc(collection(firestore, "inventory"), itemName);
+    
+    // Check if the document exists
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      const { quantity } = docSnap.data();
-      if (quantity === 1) {
-        await deleteDoc(docRef);
-      } else {
-        await setDoc(docRef, { quantity: quantity - 1 });
-      }
+      // Delete the document regardless of quantity
+      await deleteDoc(docRef);
     }
+  
+    // Update the inventory after deletion
     await updateInventory();
   };
+  
 
   //Add Item
-  const addItem = async (item) => {
-    const docRef = doc(collection(firestore, "inventory"), item);
+  const addItem = async (itemName, itemQuantity) => {
+    const docRef = doc(collection(firestore, "inventory"), itemName);
     // console.log(`in delete; itemName: "${itemName}" docRef: ${docRef}`)
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const { quantity } = docSnap.data();
-      await setDoc(docRef, { quantity: quantity + 1 });
+      await setDoc(docRef, { quantity: quantity + itemQuantity});
     } else {
-      await setDoc(docRef, { quantity: 1 });
+      await setDoc(docRef, { quantity: itemQuantity });
     }
     await updateInventory();
   };
@@ -98,6 +104,9 @@ export default function Home() {
     await updateInventory();
   };
 
+  //filter inventory
+  const filteredInventory = inventory.filter(item =>item.name.toLowerCase().includes(searchTerm.toLowerCase()))
+
   return (
     <Box
       width="100vw"
@@ -107,6 +116,8 @@ export default function Home() {
       justifyContent={"center"}
       alignItems={"center"}
       gap={2}
+      bgcolor={'yellow'}
+      overflow={'hidden'}
     >
       {/* <UpdateModal
       open={open}
@@ -134,17 +145,29 @@ export default function Home() {
             <TextField
               variant="outlined"
               fullWidth
+              label="Item Name"
               value={itemName}
               onChange={(e) => {
                 setItemName(e.target.value);
+              }}
+            />
+            <TextField
+              variant="outlined"
+              fullWidth
+              label="Quantity"
+              type="number"
+              value={itemQuantity}
+              onChange={(e) => {
+                setItemQuantity(Number(e.target.value));
               }}
             />
             <Button
               variant="outlined"
               DeleteIcon
               onClick={() => {
-                addItem(itemName);
+                addItem(itemName, itemQuantity);
                 setItemName("");
+                setItemQuantity("")
                 handleClose();
               }}
             >
@@ -153,12 +176,23 @@ export default function Home() {
           </Stack>
         </Box>
       </Modal>
+      <Stack spacing={2} direction='row'>
       <Button variant="contained" onClick={() => handleOpen()}>
         Add New Item
       </Button>
+      <TextField
+        variant="outlined"
+        placeholder="Search Items"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        sx={{ marginBottom: 2 }}
+      />
+      </Stack>
+      
+    
       <Box>
         <Box
-          width="800px"
+          width="1000px"
           height="100px"
           bgcolor="#ADD8E6"
           alignItems="center"
@@ -169,11 +203,27 @@ export default function Home() {
             Inventory Items
           </Typography>
         </Box>
-        <Stack width="800px" height="500px" spacing={2} overflow="auto">
-          {inventory.map(({ name, quantity }) => (
+        <Stack width="1000px" height="500px" spacing={2} sx={{
+            overflow: 'hidden', // Hide scrollbars initially
+            '&:hover': {
+              overflowY: 'auto', // Show vertical scrollbar on hover
+            },
+            '&::-webkit-scrollbar': {
+              width: '8px',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+              borderRadius: '10px',
+            },
+            '&:hover::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            },
+          }}>
+          {filteredInventory.map(({ name, quantity }) => (
             <Box
               key={name}
-              width="96%"
+              width="100%"
+              height="50px"
               // minHeight="150px"
               display="flex"
               // alignItems="center"
@@ -194,7 +244,7 @@ export default function Home() {
                 </Grid>
              
               </Grid>
-              <Box display={"flex"} justifyContent={"space-around"}>
+              <Box display={"flex"} justifyContent={"space-around"} p={5}>
                 <IconButton
                   onClick={() => {
                     setCurrentItem({ name, quantity });
