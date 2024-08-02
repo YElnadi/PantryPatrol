@@ -145,10 +145,15 @@ export default function Home() {
       }
       //update item
       const oldDocRef = doc(collection(firestore, "inventory"), oldName);
-      await setDoc(oldDocRef, { quantity: itemQuantity }, { merge: true });
+      const updatedData = { quantity: itemQuantity };
 
       if (itemName !== oldName) {
-        await deleteDoc(doc(collection(firestore, "inventory"), oldName));
+        const newDocRef = doc(collection(firestore, "inventory"), itemName);
+        await setDoc(newDocRef, updatedData); // Create the new document with updated data
+        await deleteDoc(oldDocRef); // Delete the old document
+      } else {
+        // Update existing item without renaming
+        await setDoc(oldDocRef, updatedData, { merge: true });
       }
     }
     await updateInventory();
