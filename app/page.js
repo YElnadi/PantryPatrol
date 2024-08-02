@@ -4,9 +4,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 
-
-
-
 import {
   Box,
   Stack,
@@ -25,6 +22,7 @@ import {
   deleteDoc,
   doc,
   setDoc,
+  
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import UpdateModal from "./UpdateModal";
@@ -38,7 +36,8 @@ export default function Home() {
   const [itemQuantity, setItemQuantity] = useState("");
 
   const [currentItem, setCurrentItem] = useState(null);
-  const [searchTerm, setSearchTerm]=useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const updateInventory = async () => {
     const snapshot = query(collection(firestore, "inventory"));
@@ -66,18 +65,17 @@ export default function Home() {
   //remove item from Inventory
   const deleteItem = async (itemName) => {
     const docRef = doc(collection(firestore, "inventory"), itemName);
-    
+
     // Check if the document exists
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       // Delete the document regardless of quantity
       await deleteDoc(docRef);
     }
-  
+
     // Update the inventory after deletion
     await updateInventory();
   };
-  
 
   //Add Item
   const addItem = async (itemName, itemQuantity) => {
@@ -86,13 +84,40 @@ export default function Home() {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const { quantity } = docSnap.data();
-      await setDoc(docRef, { quantity: quantity + itemQuantity});
+      await setDoc(docRef, { quantity: quantity + itemQuantity });
     } else {
       await setDoc(docRef, { quantity: itemQuantity });
     }
     await updateInventory();
   };
 
+  const handleAddItem = async () => {
+    setErrorMessage("");
+
+    if (!itemName.trim() || itemQuantity <= 0) {
+      setErrorMessage("Please enter a valid name and quantity.");
+      return;
+    }
+    const docRef = doc(collection(firestore, "inventory"), itemName);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      setErrorMessage("Name already exists. Please choose a different name.");
+    } else {
+      await addItem(itemName, itemQuantity);
+      setItemName("");
+      setItemQuantity("");
+      handleClose();
+    }
+  };
+
+  const handleCloseModal = () => {
+    if (!itemName.trim() || itemQuantity <= 0) {
+      setErrorMessage("Please enter a valid name and quantity.");
+      return;
+    }
+    handleClose();
+  };
   //update data
   const updateItem = async (itemName, newName, newQuantity) => {
     const docRef = doc(collection(firestore, "inventory"), itemName);
@@ -105,7 +130,9 @@ export default function Home() {
   };
 
   //filter inventory
-  const filteredInventory = inventory.filter(item =>item.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredInventory = inventory.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <Box
@@ -116,8 +143,8 @@ export default function Home() {
       justifyContent={"center"}
       alignItems={"center"}
       gap={2}
-      bgcolor={'yellow'}
-      overflow={'hidden'}
+      bgcolor={"yellow"}
+      overflow={"hidden"}
     >
       {/* <UpdateModal
       open={open}
@@ -146,50 +173,50 @@ export default function Home() {
               variant="outlined"
               fullWidth
               label="Item Name"
+              required
+              unique
               value={itemName}
               onChange={(e) => {
                 setItemName(e.target.value);
+                setErrorMessage("");
               }}
             />
             <TextField
               variant="outlined"
               fullWidth
               label="Quantity"
+              required
               type="number"
               value={itemQuantity}
               onChange={(e) => {
                 setItemQuantity(Number(e.target.value));
+                setErrorMessage("");
               }}
             />
-            <Button
-              variant="outlined"
-              DeleteIcon
-              onClick={() => {
-                addItem(itemName, itemQuantity);
-                setItemName("");
-                setItemQuantity("")
-                handleClose();
-              }}
-            >
+            <Button variant="outlined" DeleteIcon onClick={handleAddItem}>
               Add
             </Button>
           </Stack>
+          {errorMessage && (
+            <Typography variant="body2" color="red">
+              {errorMessage}
+            </Typography>
+          )}
         </Box>
       </Modal>
-      <Stack spacing={2} direction='row'>
-      <Button variant="contained" onClick={() => handleOpen()}>
-        Add New Item
-      </Button>
-      <TextField
-        variant="outlined"
-        placeholder="Search Items"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        sx={{ marginBottom: 2 }}
-      />
+      <Stack spacing={2} direction="row">
+        <Button variant="contained" onClick={() => handleOpen()}>
+          Add New Item
+        </Button>
+        <TextField
+          variant="outlined"
+          placeholder="Search Items"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          sx={{ marginBottom: 2 }}
+        />
       </Stack>
-      
-    
+
       <Box>
         <Box
           width="1000px"
@@ -203,22 +230,27 @@ export default function Home() {
             Inventory Items
           </Typography>
         </Box>
-        <Stack width="1000px" height="500px" spacing={2} sx={{
-            overflow: 'hidden', // Hide scrollbars initially
-            '&:hover': {
-              overflowY: 'auto', // Show vertical scrollbar on hover
+        <Stack
+          width="1000px"
+          height="500px"
+          spacing={2}
+          sx={{
+            overflow: "hidden", // Hide scrollbars initially
+            "&:hover": {
+              overflowY: "auto", // Show vertical scrollbar on hover
             },
-            '&::-webkit-scrollbar': {
-              width: '8px',
+            "&::-webkit-scrollbar": {
+              width: "8px",
             },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-              borderRadius: '10px',
+            "&::-webkit-scrollbar-thumb": {
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              borderRadius: "10px",
             },
-            '&:hover::-webkit-scrollbar-thumb': {
-              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            "&:hover::-webkit-scrollbar-thumb": {
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
             },
-          }}>
+          }}
+        >
           {filteredInventory.map(({ name, quantity }) => (
             <Box
               key={name}
@@ -231,20 +263,24 @@ export default function Home() {
               bgcolor="pink"
               padding={2}
             >
-              <Grid container rowSpacing={1} columnSpacing={{xs:1, sm:2, md:3}} padding={2}>
+              <Grid
+                container
+                rowSpacing={1}
+                columnSpacing={{ xs: 1, sm: 2, md: 3 }}
+                padding={2}
+              >
                 <Grid xs={6}>
-                <Typography variant="h3" color="#333">
-                  {name.charAt(0).toUpperCase() + name.slice(1)}
-                </Typography>
+                  <Typography variant="h3" color="#333">
+                    {name.charAt(0).toUpperCase() + name.slice(1)}
+                  </Typography>
                 </Grid>
                 <Grid xs={6}>
-                     <Typography variant="h3" color="#333">
-                  {quantity}
-                </Typography>
+                  <Typography variant="h3" color="#333">
+                    {quantity}
+                  </Typography>
                 </Grid>
-             
               </Grid>
-              <Box display={"flex"} justifyContent={"space-around"} p={5}>
+              <Box display={"flex"} justifyContent={"space-around"} p={2}>
                 <IconButton
                   onClick={() => {
                     setCurrentItem({ name, quantity });
